@@ -35,6 +35,8 @@ module.exports = function (app, passport, db) {
       address: req.body.address, 
       price: req.body.price, 
       comments: req.body.comments,
+      listingUrl: req.body.listingUrl || '',
+      status: req.body.status || 'Not Visited',
       loveit: 0, 
       hateit: 0 
     }, (err, result) => {
@@ -55,6 +57,15 @@ module.exports = function (app, passport, db) {
       }, (err) => {
         if (err) console.log(err)
       })
+
+      if (req.body.listingUrl) {
+        db.collection('links').save({
+          homeId: result.insertedId,
+          listingUrl: req.body.listingUrl
+        }, (err) => {
+          if (err) console.log(err)
+        })
+      }
       
       res.redirect('/profile')
     })
@@ -122,6 +133,52 @@ module.exports = function (app, passport, db) {
       
       res.send('Home deleted!')
     })
+  })
+
+  app.post('/homes/update', (req, res) => {
+    const homeId = req.body.homeId
+    if (!homeId) return res.redirect('/profile')
+
+    const homeObjectId = ObjectId(homeId)
+    const updateDoc = {
+      address: req.body.address,
+      price: req.body.price,
+      comments: req.body.comments,
+      status: req.body.status || 'Not Visited',
+      listingUrl: req.body.listingUrl || ''
+    }
+
+    db.collection('address').findOneAndUpdate(
+      { _id: homeObjectId },
+      { $set: updateDoc },
+      { returnDocument: 'after' },
+      (err) => {
+        if (err) {
+          console.log(err)
+          return res.redirect('/profile')
+        }
+
+        db.collection('comments').updateOne(
+          { homeId: homeObjectId },
+          { $set: { comments: req.body.comments } },
+          { upsert: true }
+        )
+
+        db.collection('prices').updateOne(
+          { homeId: homeObjectId },
+          { $set: { price: req.body.price } },
+          { upsert: true }
+        )
+
+        db.collection('links').updateOne(
+          { homeId: homeObjectId },
+          { $set: { listingUrl: req.body.listingUrl || '' } },
+          { upsert: true }
+        )
+
+        res.redirect('/profile')
+      }
+    )
   })
 
   // =============================================================================

@@ -10,89 +10,159 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
-  <div class="container">
+<body class="dashboard-page">
+  <div class="dashboard-shell container">
 
-    <div class="page-header text-center">
-      <h1><span class="fa fa-home"></span> Home Hunt - My Listings</h1>
+    <div class="dashboard-header">
+      <div>
+        <span class="dashboard-badge"><i class="fa fa-map-marker"></i> Saved homes</span>
+        <h1><span class="fa fa-home"></span> Home Hunt</h1>
+        <p>Manage listings, track prices, and remember how each home made you feel.</p>
+      </div>
       <a href="/logout" class="btn btn-default btn-sm">Logout</a>
     </div>
 
-    <div class="row">
+    <div class="row dashboard-content">
 
       <!-- LOCAL INFORMATION -->
-      <div class="col-sm-6">
-        <div class="well">
-          <h3><span class="fa fa-user"></span> Local</h3>
+      <div class="col-sm-4">
+        <div class="info-card">
+          <h3><span class="fa fa-user"></span> Account</h3>
 
           <% if (user.local.email) { %>
-            <p>
-              <strong>id</strong>: <%= user._id %><br>
-                <strong>email</strong>: <%= user.local.email %><br>
-                  <strong>password</strong>: <%= user.local.password %>
+            <p class="account-meta">
+              <span><strong>ID</strong> <%= user._id %></span>
+              <span><strong>Email</strong> <%= user.local.email %></span>
+              <span><strong>Password</strong> <%= user.local.password %></span>
             </p>
 
-            <a href="/unlink/local" class="btn btn-default">Unlink</a>
-            <% } else { %>
-              <a href="/connect/local" class="btn btn-default">Connect Local</a>
-              <% } %>
+            <a href="/unlink/local" class="btn btn-default btn-block">Unlink account</a>
+          <% } else { %>
+            <a href="/connect/local" class="btn btn-default btn-block">Connect Local</a>
+          <% } %>
 
         </div>
-      </div>
-      <div class="col-sm-6">
-        <h3>My Home Listings</h3>
-        <ul class="messages">
-          <% for(var i=0; i<homes.length; i++) {%>
-            <li class="message">
-              <div class="home-listing">
-                <p><strong>Address:</strong>
-                  <%= homes[i].address %>
-                </p>
-                <p><strong>Price:</strong> $<%= homes[i].price || 'N/A' %>
-                </p>
-                <p><strong>Comments:</strong>
-                  <%= homes[i].comments || 'No comments' %>
-                </p>
-                <div class="home-actions">
-                  <span class="loveit-count">Love it: <%= homes[i].loveit || 0 %></span>
-                  <button class="loveit-btn btn btn-success btn-sm" data-home-id="<%= homes[i]._id.toString() %>"
-                    data-loveit="<%= homes[i].loveit || 0 %>">
-                    <i class="fa fa-heart" aria-hidden="true"></i> Love it
-                  </button>
-                  <span class="hateit-count">Hate it: <%= homes[i].hateit || 0 %></span>
-                  <button class="hateit-btn btn btn-danger btn-sm" data-home-id="<%= homes[i]._id.toString() %>"
-                    data-hateit="<%= homes[i].hateit || 0 %>">
-                    <i class="fa fa-times-circle" aria-hidden="true"></i> Hate it
-                  </button>
-                  <button class="delete-btn btn btn-default btn-sm" data-home-id="<%= homes[i]._id.toString() %>">
-                    <i class="fa fa-trash" aria-hidden="true"></i> Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-            <% } %>
-        </ul>
 
-        <h2>Add a Home Listing</h2>
         <% if (user.local.email) { %>
-          <form action="/homes" method="POST">
+        <div class="info-card add-card">
+          <h3><span class="fa fa-plus-circle"></span> Add a home</h3>
+          <form action="/homes" method="POST" class="add-form">
             <div class="form-group">
+              <label>Address</label>
               <input type="text" class="form-control" placeholder="Address" name="address" required>
             </div>
             <div class="form-group">
+              <label>Price</label>
               <input type="text" class="form-control" placeholder="Price" name="price" required>
             </div>
             <div class="form-group">
+              <label>Listing URL</label>
+              <input type="url" class="form-control" placeholder="https://example.com/listing" name="listingUrl">
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select class="form-control" name="status">
+                <option value="Not Visited" selected>Not visited</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Visited">Visited</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Comments</label>
               <textarea class="form-control" placeholder="Comments about the home" name="comments" rows="3"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
           </form>
-          <% } %>
+        </div>
+        <% } %>
+      </div>
+
+      <div class="col-sm-8">
+        <div class="listings-card">
+          <h3>My Home Listings</h3>
+          <ul class="messages">
+            <% for(var i=0; i<homes.length; i++) { %>
+              <li class="message">
+                <div class="home-listing">
+                  <div class="listing-meta">
+                    <p><strong>Address:</strong> <%= homes[i].address %></p>
+                    <p><strong>Price:</strong> $<%= homes[i].price || 'N/A' %></p>
+                    <p><strong>Listing:</strong>
+                      <% if (homes[i].listingUrl) { %>
+                        <a class="listing-link" href="<%= homes[i].listingUrl %>" target="_blank" rel="noopener noreferrer">View listing</a>
+                      <% } else { %>
+                        <span class="listing-missing">No link added</span>
+                      <% } %>
+                    </p>
+                    <p><strong>Status:</strong> 
+                      <span class="status-pill status-<%= (homes[i].status || 'Not Visited').toLowerCase().replace(/\s+/g, '-') %>">
+                        <%= homes[i].status || 'Not Visited' %>
+                      </span>
+                    </p>
+                    <p><strong>Comments:</strong> <%= homes[i].comments || 'No comments' %></p>
+                  </div>
+                  <div class="home-actions">
+                    <div class="sentiment">
+                      <span class="loveit-count">Love it: <%= homes[i].loveit || 0 %></span>
+                      <button class="loveit-btn btn btn-success btn-sm" data-home-id="<%= homes[i]._id.toString() %>"
+                        data-loveit="<%= homes[i].loveit || 0 %>">
+                        <i class="fa fa-heart" aria-hidden="true"></i> Love it
+                      </button>
+                    </div>
+                    <div class="sentiment">
+                      <span class="hateit-count">Hate it: <%= homes[i].hateit || 0 %></span>
+                      <button class="hateit-btn btn btn-danger btn-sm" data-home-id="<%= homes[i]._id.toString() %>"
+                        data-hateit="<%= homes[i].hateit || 0 %>">
+                        <i class="fa fa-times-circle" aria-hidden="true"></i> Hate it
+                      </button>
+                    </div>
+                    <button class="delete-btn btn btn-default btn-sm" data-home-id="<%= homes[i]._id.toString() %>">
+                      <i class="fa fa-trash" aria-hidden="true"></i> Delete
+                    </button>
+                  </div>
+                  <details class="listing-edit">
+                    <summary>Edit listing</summary>
+                    <form action="/homes/update" method="POST" class="edit-form">
+                      <input type="hidden" name="homeId" value="<%= homes[i]._id %>">
+                      <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" class="form-control" name="address" value="<%= homes[i].address %>" required>
+                      </div>
+                      <div class="form-group">
+                        <label>Price</label>
+                        <input type="text" class="form-control" name="price" value="<%= homes[i].price %>" required>
+                      </div>
+                      <div class="form-group">
+                        <label>Listing URL</label>
+                        <input type="url" class="form-control" name="listingUrl" value="<%= homes[i].listingUrl || '' %>">
+                      </div>
+                      <div class="form-group">
+                        <label>Status</label>
+                        <select class="form-control" name="status">
+                          <option value="Not Visited" <%= (homes[i].status || 'Not Visited') === 'Not Visited' ? 'selected' : '' %>>Not visited</option>
+                          <option value="Scheduled" <%= homes[i].status === 'Scheduled' ? 'selected' : '' %>>Scheduled</option>
+                          <option value="Visited" <%= homes[i].status === 'Visited' ? 'selected' : '' %>>Visited</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label>Comments</label>
+                        <textarea class="form-control" name="comments" rows="3"><%= homes[i].comments || '' %></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-primary btn-block">Save changes</button>
+                    </form>
+                  </details>
+                </div>
+              </li>
+            <% } %>
+          </ul>
+        </div>
       </div>
 
     </div>
 
-    <script src="main.js"></script>
+  </div>
+
+  <script src="main.js"></script>
 
 </body>
 
